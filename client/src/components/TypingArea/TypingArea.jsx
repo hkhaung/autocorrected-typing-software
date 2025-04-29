@@ -1,8 +1,7 @@
-import './TypingArea.css';
-import { useEffect, useRef, useState } from 'react';
+import "./TypingArea.css";
+import { useEffect, useRef, useState } from "react";
 
-
-function TypingArea({ onTypingStart, onTextChange, isFinished, setTimer }) {
+function TypingArea({ onTypingStart, onTextChange, isFinished, setTimer, reset }) {
   const [hasStarted, setHasStarted] = useState(false);
   const inputRef = useRef(null);
 
@@ -14,24 +13,38 @@ function TypingArea({ onTypingStart, onTextChange, isFinished, setTimer }) {
 
     const text = inputRef.current.innerText;
     onTextChange(text);
-  };
+  }
 
   function handleNewlines(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();  // Stops newlines from being added
+    if (e.key === "Enter") {
+      e.preventDefault(); // Stops newlines from being added
     }
-  };
+  }
 
   useEffect(() => {
-    if (isFinished && inputRef.current) {
-      inputRef.current.setAttribute('contenteditable', 'false');
+    if (!inputRef.current) {
+      return;
+    }
+
+    if (isFinished) {
+      inputRef.current.setAttribute("contenteditable", "false");
       setTimer(false);
     }
+
   }, [isFinished, setTimer]);
+
+  useEffect(() => {
+    inputRef.current.innerHTML = '';
+    inputRef.current.setAttribute("contenteditable", "true");
+    setHasStarted(false);
+  }, [reset]);
+  
 
   return (
     <div className="typing-area">
-      <label htmlFor="typing-input" className="typing-label">And type them below:</label>
+      <label htmlFor="typing-input" className="typing-label">
+        And type them below:
+      </label>
       <div
         id="typing-input"
         contentEditable={true}

@@ -1,4 +1,4 @@
-import './SinglePlayer.css';
+import "./SinglePlayer.css";
 import { useState, useEffect } from "react";
 import Words from "../Words/Words";
 import TypingArea from "../TypingArea/TypingArea";
@@ -9,9 +9,8 @@ const wordsList = ["hello", "world", "react", "rocks!"];
 function SinglePlayer({ isSinglePlayer = true }) {
   const [currentText, setCurrentText] = useState("");
   const [timer, setTimer] = useState(false);
-
-  const expectedLength = wordsList.join(" ").length;
-  const isFinished = currentText.length >= expectedLength;
+  const [isFinished, setIsFinished] = useState(false);
+  const [reset, setReset] = useState(false);  // is a switch, bool vals not used
 
   function handleTypingStart() {
     setTimer(true);
@@ -19,12 +18,23 @@ function SinglePlayer({ isSinglePlayer = true }) {
 
   function handleTextChange(text) {
     setCurrentText(text);
+    const expectedLength = wordsList.join(" ").length;
+    if (text.length >= expectedLength) {
+      setIsFinished(true);
+    }
+  }
+
+  function handleReset() {
+    setCurrentText("");
+    setTimer(false);
+    setIsFinished(false);
+    setReset(!reset);
   }
 
   return (
     <>
       <h1>Autocorrected Typing Software</h1>
-      <PlayerStats isTypingStarted={timer} />
+      <PlayerStats timer={timer} reset={reset} />
 
       <div>
         <div className="words-typing-area">
@@ -34,6 +44,7 @@ function SinglePlayer({ isSinglePlayer = true }) {
             onTextChange={handleTextChange}
             isFinished={isFinished}
             setTimer={setTimer}
+            reset={reset}
           />
         </div>
 
@@ -45,7 +56,9 @@ function SinglePlayer({ isSinglePlayer = true }) {
         </div>
 
         <div className="buttons">
-          <button id="restart-btn">Restart</button>
+          <button id="restart-btn" onClick={handleReset}>
+            Reset
+          </button>
         </div>
       </div>
     </>

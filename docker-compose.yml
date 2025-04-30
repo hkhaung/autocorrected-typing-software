@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8
+    container_name: mysql-container
+    restart: always
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    networks:
+      - ats-network
+
+  flask:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ats-backend
+    ports:
+      - "8000:5000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - ats-network

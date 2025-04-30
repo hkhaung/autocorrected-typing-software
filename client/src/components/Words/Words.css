@@ -1,13 +1,3 @@
-.words {
-  display: block;
-}
-
-.words-area {
-  font-size: 1.2rem;
-  line-height: 2rem;
-  margin-top: 10px;
-}
-
 .correct {
   color: green;
 }
@@ -23,18 +13,18 @@
 
 .word-highlight-all-correct {
   background-color: #d4edda;
-  padding: 2px 4px;
+  padding: 2px 0px;
   border-radius: 4px;
 }
 
 .word-highlight-one-wrong {
   background-color: #fff3cd;
-  padding: 2px 4px;
+  padding: 2px 1px;
   border-radius: 4px;
 }
 
 .word-highlight-multiple-wrong {
   background-color: #f8d7da;
-  padding: 2px 4px;
+  padding: 2px 1px;
   border-radius: 4px;
 }

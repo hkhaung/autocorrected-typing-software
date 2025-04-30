@@ -53,7 +53,7 @@ function Words({ words, currentText }) {
     <div className="words">
       <label htmlFor="words" className="words-label">Look at the following words:</label>
       <div className="words-area">
-        {words.map((word, wordIndex) => renderHighlightedWord(word, wordIndex))}
+        {words && words.map((word, wordIndex) => renderHighlightedWord(word, wordIndex))}
       </div>
     </div>
   );

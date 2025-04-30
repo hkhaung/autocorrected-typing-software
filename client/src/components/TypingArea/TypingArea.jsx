@@ -1,4 +1,3 @@
-import "./TypingArea.css";
 import { useEffect, useRef, useState } from "react";
 
 function TypingArea({ onTypingStart, onTextChange, isFinished, setTimer, reset }) {

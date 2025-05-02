@@ -3,7 +3,7 @@ from sqlalchemy import select
 from server.extensions import db
 from server.data.models import Books, Paragraphs
 
-MIN_LINE_LENGTH = 106
+MIN_LINE_LENGTH = 5
 
 
 def read_text_file(path, encoding='utf-8'):
@@ -16,6 +16,32 @@ def read_text_file(path, encoding='utf-8'):
 
 
 def parse_paragraphs(data):
+    def clean_text(text):
+        replacements = {
+            # Quotes and apostrophes
+            '\u2018': "'", '\u2019': "'", '\u201C': '"', '\u201D': '"',
+            '\u201A': "'", '\u201E': '"', '\u2032': "'", '\u2033': '"',
+            '\u02BC': "'",
+
+            # Dashes
+            '\u2013': '-', '\u2014': '--', '\u2212': '-',
+
+            # Ellipsis
+            '\u2026': '...',
+
+            # Spaces
+            '\u00A0': ' ',
+            '\u2000': ' ', '\u2001': ' ', '\u2002': ' ', '\u2003': ' ',
+            '\u2004': ' ', '\u2005': ' ', '\u2006': ' ', '\u2007': ' ',
+            '\u2008': ' ', '\u2009': ' ', '\u200A': ' ',
+        }
+
+        for bad, good in replacements.items():
+            text = text.replace(bad, good)
+
+        return text
+
+
     paragraphs = []
     current_paragraph = ''
     lines = data.splitlines()
@@ -25,6 +51,7 @@ def parse_paragraphs(data):
                 paragraphs.append(current_paragraph.strip())
                 current_paragraph = ''
         else:
+            line = clean_text(line)
             current_paragraph += line + ' '
     if current_paragraph:
         paragraphs.append(current_paragraph.strip())
@@ -43,7 +70,7 @@ def get_title_author_name(paragraphs):
 
 def get_random_paragraphs_from_book(paragraphs):
     eligible = [p for p in paragraphs if len(p) >= MIN_LINE_LENGTH]
-    return random.sample(eligible, min(10, len(eligible)))
+    return random.sample(eligible, min(1, len(eligible)))
 
 
 def save_paragraphs(file_path):
@@ -65,7 +92,10 @@ def save_paragraphs(file_path):
             db.session.flush()  # get book id after adding book row
 
         for text in selected_paragraphs:
-            parag = Paragraphs(book_id=book.id, paragraph=text)
-            db.session.add(parag)
+            text = text.strip()
+            print(text)
+            if not db.session.query(Paragraphs).filter_by(paragraph=text).first():
+                parag = Paragraphs(book_id=book.id, paragraph=text)
+                db.session.add(parag)
 
         # print(f"Inserted {len(selected_paragraphs)} paragraphs for book -> {title} by {author}")

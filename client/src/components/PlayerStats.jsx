@@ -1,24 +1,19 @@
 import { useState, useEffect } from "react";
 
-function PlayerStats({ timer, reset }) {
-  const [wpm, setWpm] = useState(null);
-  const [accuracy, setAccuracy] = useState(null);
+function PlayerStats({ wpm, accuracy, timer, reset }) {
   const [time, setTime] = useState(0);
 
   useEffect(() => {
     let interval;
     if (timer) {
       interval = setInterval(() => {
-          setTime((prevTime) => prevTime + 10);
+        setTime((prevTime) => prevTime + 10);
       }, 10);
-
     }
     return () => clearInterval(interval);
   }, [timer]);
 
   useEffect(() => {
-    setWpm(null);
-    setAccuracy(null);
     setTime(null);
   }, [reset]);
 

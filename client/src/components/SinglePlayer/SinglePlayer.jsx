@@ -1,5 +1,5 @@
 import "./SinglePlayer.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import Words from "../Words/Words";
 import TypingArea from "../TypingArea/TypingArea";
@@ -12,7 +12,7 @@ function SinglePlayer({ isSinglePlayer = true }) {
   const [reset, setReset] = useState(false); // is a switch, bool vals not used
   const [wordsList, setWordsList] = useState([]);
 
-  const [socket, setSocket] = useState(null);
+  const socket = useRef(null);
   const [wpm, setWpm] = useState(null);
   const [acc, setAcc] = useState(null);
 
@@ -27,7 +27,7 @@ function SinglePlayer({ isSinglePlayer = true }) {
   }
 
   function handleTypingStart() {
-    if (!socket) {
+    if (!socket.current) {
       setupSocket();
     }
     setStartTimer(true);
@@ -38,16 +38,17 @@ function SinglePlayer({ isSinglePlayer = true }) {
     const expectedLength = wordsList.join(" ").length;
     if (text.length >= expectedLength) {
       setIsFinished(true);
-    } else if (socket && socket.connected) {
-      console.log("sending start_typing", text);
-      socket.emit("start_typing", { typed: text });
+    }
+    
+    if (socket.current && socket.current.connected) {
+      socket.current.emit("start_typing", { wordsList: wordsList, typed: text });
     }
   }
 
   function handleReset() {
-    if (socket) {
-      socket.disconnect();
-      setSocket(null);
+    if (socket.current) {
+      socket.current.disconnect();
+      socket.current = null;
     }
     setCurrentText("");
     setStartTimer(false);
@@ -65,26 +66,29 @@ function SinglePlayer({ isSinglePlayer = true }) {
   }
 
   function setupSocket() {
-    if (socket) return null;
+    if (socket.current || isFinished) return null;
 
     // const newSocket = io();
     const newSocket = io("http://127.0.0.1:5000", {
       reconnectionAttempts: 5,
-      timeout: 20000,
-      transports: ["websocket", "polling"],
-    });
-
-    newSocket.on("connect", () => {
-      console.log("Socket connected:", newSocket.id);
+      timeout: 10000,
+      transports: ["polling", "websocket"],
     });
 
     newSocket.on("connect_error", (err) => {
       console.error("Socket connection error:", err);
     });
 
-    newSocket.on("wpm_update", (data) => {
-      console.log("WPM update received:", data.wpm);
+    newSocket.on("wpm_acc_update", (data) => {
       setWpm(data.wpm);
+      setAcc(data.acc);
+    });
+
+    newSocket.on("done", () => {
+      setTimeout(() => {
+        newSocket.disconnect();
+        socket.current = null;
+      }, 1000);
     });
 
     newSocket.on("timeout", (data) => {
@@ -92,12 +96,25 @@ function SinglePlayer({ isSinglePlayer = true }) {
       handleReset();
     });
 
-    setSocket(newSocket);
+    socket.current = newSocket;
     return newSocket;
   }
 
   useEffect(() => {
+    if (isFinished && socket) {
+      socket.current.emit("finish_typing", { finished: true });
+    }
+  }, [isFinished, socket]);
+
+  useEffect(() => {
     fetchWordsList();
+
+    return () => {
+      if (socket.current) {
+        socket.current.disconnect();
+        socket.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -112,14 +129,6 @@ function SinglePlayer({ isSinglePlayer = true }) {
     }
   }, [isFinished]);
 
-  useEffect(() => {
-    if (isFinished && socket) {
-      socket.emit("finish_typing", { finished: true }, () => {
-        socket.disconnect();
-        setSocket(null);
-      });
-    }
-  }, [isFinished, socket]);
 
   return (
     <>

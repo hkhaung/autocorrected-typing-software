@@ -1,5 +1,6 @@
 import './Words.css';
 
+
 function Words({ words, currentText }) {
   const typedWords = currentText.trim().split(' ');
 

@@ -1,3 +1,4 @@
+import socket
 from flask import Blueprint, jsonify, request
 from sqlalchemy import select, func
 from server.data.models import Paragraphs
@@ -24,7 +25,7 @@ def get_words_list():
         return jsonify({"words": words_list})
 
 
-def wpm_updater(sid):
+def wpm_acc_updater(sid):
     MAX_DURATION = 300  # 5 mins
 
     while True:
@@ -42,9 +43,10 @@ def wpm_updater(sid):
             socketio.emit('timeout', {'message': 'Session timed out after 5 minutes.'}, to=sid)
             break
 
-        print(session["typed"])
-        user_wpm = wpm(session["typed"], elapsed)
-        socketio.emit('wpm_update', {'wpm': user_wpm}, to=sid)
+        typed = session["typed"]
+        user_wpm = wpm(typed, elapsed)
+        user_acc = accuracy(typed, session["words_list"])
+        socketio.emit('wpm_acc_update', {'wpm': user_wpm, 'acc': user_acc}, to=sid)
         
         time.sleep(1)
 
@@ -52,18 +54,20 @@ def wpm_updater(sid):
 @socketio.on('start_typing')
 def start_typing(data):
     sid = request.sid
+    words_list = data.get('wordsList', [])
     typed = data.get('typed', '')
 
     if sid not in sessions:
         sessions[sid] = {
             'start_time': None,
-            'typed': '',
+            'words_list': words_list,
+            'typed': typed,
             'is_finished': False
         }
     
     if sessions[sid]["start_time"] is None and typed:
         sessions[sid]["start_time"] = datetime.now()
-        threading.Thread(target=wpm_updater, args=(sid,), daemon=True).start()
+        threading.Thread(target=wpm_acc_updater, args=(sid,), daemon=True).start()
 
     sessions[sid]['typed'] = typed
 
@@ -72,9 +76,8 @@ def start_typing(data):
 def finish_typing(data):
     sid = request.sid
     if sid in sessions and data.get('finished', False):
-        socketio.emit("finish_typing")
-        sessions[sid]['is_finished'] = True
-        return True
+        socketio.emit("done", to=sid)
+        socketio.emit("finish_typing", to=sid)
 
 
 @socketio.on('disconnect')

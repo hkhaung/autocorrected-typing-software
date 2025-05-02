@@ -33,5 +33,5 @@ def wpm(typed, elapsed):
     
     num_chars = len(typed)
     mins = elapsed / 60
-    return (num_chars / 5) / mins
+    return round((num_chars / 5) / mins, 2)
     

@@ -1,10 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-
-import os
+from flask_socketio import SocketIO
 
 
 db = SQLAlchemy()
-
-if os.environ.get('FLASK_ENV') == 'production':
-  migrate = Migrate()
+migrate = Migrate()
+socketio = SocketIO()

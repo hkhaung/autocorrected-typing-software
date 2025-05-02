@@ -8,7 +8,13 @@ from sqlalchemy import inspect
 from server.data.models import Players, PlayerStats, Leaderboard
 from server.data.parse_books import save_paragraphs
 
+from server.extensions import socketio
+
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+print("Running in", os.environ.get("FLASK_ENV"))
 
 
 def create_app():
@@ -40,15 +46,20 @@ def create_app():
     
     
     app.register_blueprint(api_bp)
+
     db.init_app(app)    
     if os.environ.get('FLASK_ENV') == 'production':
         migrate.init_app(app, db)
         seed_data()
+
+        socketio.init_app(app)
     else:
         with app.app_context():
             db.create_all()
             seed_data()
-    
+        
+        socketio.init_app(app, cors_allowed_origins="*")
+        
     return app
 
 
@@ -70,8 +81,9 @@ if __name__ == '__main__':
     try:
         app = create_app()
         if os.environ.get('FLASK_ENV') == 'development':
-            app.run(debug=True)
+            socketio.run(app, debug=True)
         else:
-            app.run(host='0.0.0.0', port=5000)
+            socketio.run(app, host='0.0.0.0', port=5000)
+        
     except Exception as e:
         print(f"Error starting the app: {e}")

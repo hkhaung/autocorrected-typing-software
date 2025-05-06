@@ -1,4 +1,3 @@
-import socket
 from flask import Blueprint, jsonify, request
 from sqlalchemy import select, func
 from server.data.models import Paragraphs
@@ -10,10 +9,18 @@ from datetime import datetime
 import time
 import threading
 
+from server.typing_functionality.utils import lines_from_file, remove_punctuation, reformat, similar
+from server.typing_functionality.autocorrect import autocorrect, subs, edit_distance, diff
+
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 sessions = {}
+
+WORDS_LIST = lines_from_file('server/data/words.txt')
+WORDS_SET = set(WORDS_LIST)
+LETTER_SETS = [(w, set(w)) for w in WORDS_LIST]
+SIMILARITY_LIMIT = 2
 
 
 @api_bp.route('/get_words_list', methods=['GET', 'OPTIONS'])
@@ -25,6 +32,7 @@ def get_words_list():
         return jsonify({"words": words_list})
 
 
+# TODO: can be replaced with start_background_task?
 def wpm_acc_updater(sid):
     MAX_DURATION = 300  # 5 mins
 
@@ -80,12 +88,45 @@ def finish_typing(data):
         socketio.emit("finish_typing", to=sid)
 
 
+@api_bp.route('/autocorrect', methods=['POST', 'OPTIONS'])
+def autocorrect_route():
+    if request.method == 'OPTIONS':
+        return '', 204
+
+    data = request.get_json()
+    curr_word = data.get('typed', '')
+
+    if not curr_word or curr_word.isdigit():
+        return jsonify({'corrected_word': curr_word})
+
+    curr_word = curr_word.strip().split()[-1]
+    curr_word_clean = remove_punctuation(curr_word).lower()
+    if curr_word_clean in WORDS_SET or curr_word_clean == '':
+        return jsonify({'corrected_word': curr_word})
+    
+    letters = set(curr_word_clean)
+    candidates = [w for w, s in LETTER_SETS if similar(s, letters, SIMILARITY_LIMIT)]
+
+    for func in [diff, subs, edit_distance]:
+        try:
+            guess = autocorrect(curr_word_clean, candidates, func, SIMILARITY_LIMIT)
+            corrected_word = reformat(guess, curr_word)
+            print("Correcting word from", curr_word, "to", corrected_word)
+            return jsonify({'corrected_word': corrected_word})
+        except BaseException:
+            pass
+
+    # was not able to correct, return original word
+    print("Nothing was corrected")
+    return jsonify({'corrected_word': curr_word})
+
+
 @socketio.on('disconnect')
 def disconnect():
     print(f"Disconnected: {request.sid}")
     sid = request.sid
     if sid in sessions:
-        del sessions[sid] 
+        del sessions[sid]
 
 
 @api_bp.route('/test', methods=['POST', 'OPTIONS'])

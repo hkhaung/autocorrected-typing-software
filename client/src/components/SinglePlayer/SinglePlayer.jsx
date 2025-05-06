@@ -5,22 +5,27 @@ import Words from "../Words/Words";
 import TypingArea from "../TypingArea/TypingArea";
 import PlayerStats from "../PlayerStats";
 
+
 function SinglePlayer({ isSinglePlayer = true }) {
   const [currentText, setCurrentText] = useState("");
   const [startTimer, setStartTimer] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [reset, setReset] = useState(false); // is a switch, bool vals not used
   const [wordsList, setWordsList] = useState([]);
+  const [expectedWords, setExpectedWords] = useState('');
 
   const socket = useRef(null);
   const [wpm, setWpm] = useState(null);
   const [acc, setAcc] = useState(null);
+  const [autocorrect, setAutocorrect] = useState(false);
+
 
   async function fetchWordsList() {
     try {
       const res = await fetch("http://127.0.0.1:5000/api/get_words_list");
       const data = await res.json();
       setWordsList(data.words);
+      setExpectedWords(data.words.join(" "));
     } catch (err) {
       console.error("Fetch error:", err);
     }
@@ -35,8 +40,7 @@ function SinglePlayer({ isSinglePlayer = true }) {
 
   function handleTextChange(text) {
     setCurrentText(text);
-    const expectedLength = wordsList.join(" ").length;
-    if (text.length >= expectedLength) {
+    if (text === expectedWords) {
       setIsFinished(true);
     }
     
@@ -63,6 +67,13 @@ function SinglePlayer({ isSinglePlayer = true }) {
     if (isFinished) {
       handleReset();
     }
+  }
+
+  function handleAutocorrect() {
+    if (isFinished) {
+      return;
+    }
+    setAutocorrect(!autocorrect);
   }
 
   function setupSocket() {
@@ -144,12 +155,14 @@ function SinglePlayer({ isSinglePlayer = true }) {
             isFinished={isFinished}
             setTimer={setStartTimer}
             reset={reset}
+            autocorrect={autocorrect}
+            setCurrentText={setCurrentText}
           />
         </div>
 
         <div className="typing-features">
           <div className="feature">
-            <input type="checkbox" id="autocorrect" />
+            <input type="checkbox" id="autocorrect" onChange={handleAutocorrect} />
             <label htmlFor="autocorrect">Enable auto correct</label>
           </div>
         </div>

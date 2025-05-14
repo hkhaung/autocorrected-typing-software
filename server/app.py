@@ -4,8 +4,8 @@ from server.extensions import db
 
 from server.routes import api_bp
 
-from sqlalchemy import inspect
-from server.data.models import Players, PlayerStats, Leaderboard
+from sqlalchemy import inspect, select, func
+from server.data.models import Players, PlayerStats, Leaderboard, Books, Paragraphs
 from server.data.parse_books import save_paragraphs
 
 from server.extensions import socketio
@@ -64,17 +64,26 @@ def create_app():
 
 
 def seed_data():
-    def tables_exist():
+    def tables_exist_and_have_data():
         inspector = inspect(db.engine)
-        return 'books' in inspector.get_table_names() and 'paragraphs' in inspector.get_table_names()
+        tables = inspector.get_table_names()
+
+        if 'books' not in tables or 'paragraphs' not in tables:
+            return False
+
+        with db.session.begin():
+            books_count = db.session.execute(select(func.count()).select_from(Books)).scalar_one()
+            paragraphs_count = db.session.execute(select(func.count()).select_from(Paragraphs)).scalar_one()
+
+        return books_count > 0 and paragraphs_count > 0
+
     
-    if not tables_exist():
-        # print("Skipping seed -> tables not created yet.")
-        return
-    
-    save_paragraphs("server/data/advofhuckfinn.txt")
-    save_paragraphs("server/data/mobydick.txt")
-    save_paragraphs("server/data/greatgatsby.txt")
+    if not tables_exist_and_have_data():
+        save_paragraphs("server/data/advofhuckfinn.txt")
+        save_paragraphs("server/data/mobydick.txt")
+        save_paragraphs("server/data/greatgatsby.txt")
+    else:
+        print("Database already seeded")
 
 
 if __name__ == '__main__':

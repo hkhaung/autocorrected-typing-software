@@ -24,7 +24,7 @@ function TypingArea({
 
   function handleNewlines(e) {
     if (e.key === "Enter") {
-      e.preventDefault(); // Stops newlines from being added
+      e.preventDefault();  // Stops newlines from being added
     }
   }
 
@@ -51,8 +51,6 @@ function TypingArea({
       const text = inputRef.current.innerText;
       const words = text.split(" ");
       const lastChar = words[words.length - 1];
-
-      console.log(lastChar);
 
       if (lastChar === "" && words.length > 1) {
         const lastWord = words[words.length - 2];
@@ -98,24 +96,6 @@ function TypingArea({
     }
   }, [autocorrect, setCurrentText]);
 
-  // useEffect(() => {
-  //   if (autocorrect && inputRef.current) {
-  // const el = inputRef.current;
-
-  // // Save selection position
-  // const selection = window.getSelection();
-  // const range = document.createRange();
-
-  // // Update the content
-  // el.innerHTML = correctedText;
-
-  // // Move caret to end
-  // range.selectNodeContents(el);
-  // range.collapse(false);
-  // selection.removeAllRanges();
-  // selection.addRange(range);
-  //   }
-  // }, [autocorrect, correctedText]);
 
   return (
     <div className="typing-area">

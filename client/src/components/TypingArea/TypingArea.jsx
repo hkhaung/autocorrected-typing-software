@@ -56,7 +56,7 @@ function TypingArea({
         const lastWord = words[words.length - 2];
 
         try {
-          const res = await fetch("http://127.0.0.1:5000/api/autocorrect", {
+          const res = await fetch("/api/autocorrect", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ typed: lastWord }),

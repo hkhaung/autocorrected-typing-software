@@ -4,7 +4,7 @@ from server.extensions import db
 from server.data.models import Books, Paragraphs
 
 MIN_LINE_LENGTH = 5
-
+MAX_PARAGRAPH_CHAR_LEN = 510
 
 def read_text_file(path, encoding='utf-8'):
     try:
@@ -93,7 +93,7 @@ def save_paragraphs(file_path):
 
         for text in selected_paragraphs:
             text = text.strip()
-            print(text)
+            text = text[:MAX_PARAGRAPH_CHAR_LEN - 3] + '...' if len(text) > MAX_PARAGRAPH_CHAR_LEN else text
             if not db.session.query(Paragraphs).filter_by(paragraph=text).first():
                 parag = Paragraphs(book_id=book.id, paragraph=text)
                 db.session.add(parag)

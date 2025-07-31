@@ -52,3 +52,8 @@ Go into client directory and run:
 npm i
 npm run dev
 ```
+
+## Possible Improvements/Features
+
+- Multiplayer features: leaderboard, go against other users
+- Web accessibility

@@ -22,7 +22,7 @@ function SinglePlayer({ isSinglePlayer = true }) {
 
   async function fetchWordsList() {
     try {
-      const res = await fetch("/api/get_words_list");
+      const res = await fetch("http://127.0.0.1:5000/api/get_words_list");
       const data = await res.json();
       setWordsList(data.words);
       setExpectedWords(data.words.join(" "));
@@ -79,7 +79,7 @@ function SinglePlayer({ isSinglePlayer = true }) {
   function setupSocket() {
     if (socket.current || isFinished) return null;
 
-    const newSocket = io({
+    const newSocket = io("http://127.0.0.1:5000", {
       reconnectionAttempts: 5,
       timeout: 10000,
       transports: ["polling", "websocket"],

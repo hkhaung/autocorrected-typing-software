@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function PlayerStats({ wpm, accuracy, timer, errors, reset }) {
+function PlayerStats({ wpm, accuracy, timer, reset }) {
   const [time, setTime] = useState(0);
 
   useEffect(() => {

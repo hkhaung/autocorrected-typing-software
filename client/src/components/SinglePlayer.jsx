@@ -7,7 +7,7 @@ import Instructions from "./Instructions";
 
 function SinglePlayer() {
   const [currentText, setCurrentText] = useState("");
-  const [reset, setReset] = useState(false); // is a switch, bool vals not used
+  const [reset, setReset] = useState(false);  // is a switch, bool vals not used
   const [wordsList, setWordsList] = useState([]);
   const [expectedWords, setExpectedWords] = useState("");
 
@@ -20,7 +20,7 @@ function SinglePlayer() {
 
   async function fetchWordsList() {
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/get_words_list");
+      const res = await fetch("/api/get_words_list");
       const data = await res.json();
       setWordsList(data.words);
       setExpectedWords(data.words.join(" "));
@@ -94,11 +94,16 @@ function SinglePlayer() {
 
   function setupSocket() {
     if (socket.current || isFinished) return null;
+    if (socket.current && socket.current.connected) return;
 
-    const newSocket = io("http://127.0.0.1:5000", {
+    const newSocket = io({
       reconnectionAttempts: 5,
       timeout: 10000,
       transports: ["polling", "websocket"],
+    });
+
+    newSocket.on("connect", () => {
+      console.log("Socket connected:", newSocket.id);
     });
 
     newSocket.on("connect_error", (err) => {
@@ -127,14 +132,17 @@ function SinglePlayer() {
   }
 
   useEffect(() => {
-    if (isFinished && socket) {
+    if (isFinished && socket.current && socket.current.connected) {
       socket.current.emit("finish_typing", { finished: true });
     }
   }, [isFinished, socket]);
 
   useEffect(() => {
     fetchWordsList();
+  }, []);
 
+  // when component unmounts, disconnect the socket
+  useEffect(() => {
     return () => {
       if (socket.current) {
         socket.current.disconnect();

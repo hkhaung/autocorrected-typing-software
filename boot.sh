@@ -12,7 +12,4 @@ export FLASK_APP=server.app:create_app
 export FLASK_ENV=production
 
 echo "Starting Flask App with Gunicorn..."
-exec gunicorn -b 0.0.0.0:4000 --timeout 400 --access-logfile - --error-logfile - "server.app:create_app()"
-
-# to view logs
-# docker logs -f <container_name_or_id>
+exec gunicorn -k eventlet -w 1 -b 0.0.0.0:4000 --timeout 400 --access-logfile - --error-logfile - "server.app:create_app()"

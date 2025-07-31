@@ -12,8 +12,7 @@ RUN npm run build
 FROM python:3.13-slim AS ats-backend
 
 COPY server ./server
-# COPY ./client/dist ./server/build
-COPY --from=frontend-build /app/client/dist ./server/build
+COPY ./client/dist ./server/build
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
@@ -26,5 +25,5 @@ RUN apt-get update && apt-get install -y netcat-openbsd
 COPY boot.sh boot.sh
 RUN chmod +x boot.sh
 
-EXPOSE 5000
+EXPOSE 4000
 ENTRYPOINT ["./boot.sh"]

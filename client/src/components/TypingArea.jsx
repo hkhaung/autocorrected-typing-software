@@ -50,12 +50,11 @@ function TypingArea({
       
       // Get the current word (last word before the space)
       const currentWord = words[words.length - 1];
-      console.log("Space pressed, checking word:", currentWord);
       getCurrWordsListIndex(words);
 
       if (currentWord && currentWord.trim().length > 0 && words[wordsListIndex] !== currentWord) {
         try {
-          const res = await fetch("http://127.0.0.1:5000/api/autocorrect", {
+          const res = await fetch("/api/autocorrect", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ typed: currentWord }),
@@ -64,9 +63,7 @@ function TypingArea({
           const data = await res.json();
 
           // If the word is corrected, update the content
-          if (data.corrected_word && data.corrected_word !== currentWord) {
-            console.log(`Correcting "${currentWord}" to "${data.corrected_word}"`);
-            
+          if (data.corrected_word && data.corrected_word !== currentWord) {            
             // Replace the last word with the corrected word
             words[words.length - 1] = data.corrected_word;
             const newText = words.join(" ");

@@ -1,4 +1,5 @@
 import './Words.css';
+import ProgressBar from './ProgressBar';
 
 
 function Words({ words, currentText }) {
@@ -33,11 +34,8 @@ function Words({ words, currentText }) {
 
           if (typedChar != null) {
             className = typedChar === char ? 'correct' : 'incorrect';
-          } else if (
-            wordIndex === typedWords.length - 1 &&
-            i === typedWord.length
-          ) {
-            className = 'current';
+          } else if (wordIndex === typedWords.length - 1 && i === typedWord.length) {
+            className = 'current animate-pulse';
           }
 
           return (
@@ -51,10 +49,13 @@ function Words({ words, currentText }) {
   };
 
   return (
-    <div className="words">
-      <label htmlFor="words" className="words-label">Look at the following words:</label>
-      <div className="words-area">
-        {words && words.map((word, wordIndex) => renderHighlightedWord(word, wordIndex))}
+    <div className='mb-6'>
+      <ProgressBar words={words} currentText={currentText} />
+
+      <div className='p-6 bg-gray-50 border-2 border-gray-200 border-t-0 rounded-b-lg leading-relaxed'>
+        <div className='break-words whitespace-normal'>
+          {words && words.map((word, wordIndex) => renderHighlightedWord(word, wordIndex))}
+        </div>
       </div>
     </div>
   );

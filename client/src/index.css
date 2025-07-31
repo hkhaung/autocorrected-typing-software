@@ -1,5 +1,7 @@
+@import "tailwindcss";
+
 :root {
-  --text-color: rgba(255, 255, 255, 0.87);
+  --text-color: black;
   --blue-main: rgb(0, 179, 255);
   --gray-secondary: rgb(96, 96, 96);
   --font: "Funnel Sans";

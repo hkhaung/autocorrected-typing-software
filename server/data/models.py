@@ -43,7 +43,7 @@ class Books(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.Text, nullable=False)
-    author = db.Column(db.Text, nullable=False, unique=True)
+    author = db.Column(db.String(255), nullable=False, unique=True)
 
     def __repr__(self):
         return f"<Books(id={self.id}, title={self.title}, author={self.author})>"
@@ -54,7 +54,7 @@ class Paragraphs(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     book_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=False)
-    paragraph = db.Column(db.Text, unique=True)
+    paragraph = db.Column(db.String(510), unique=True)
 
     def __repr__(self):
         return f"<Paragraphs(id={self.id}, book_id={self.book_id})>"

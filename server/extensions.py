@@ -6,3 +6,4 @@ from flask_socketio import SocketIO
 db = SQLAlchemy()
 migrate = Migrate()
 socketio = SocketIO()
+socketio = SocketIO(async_mode="eventlet")

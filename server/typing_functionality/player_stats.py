@@ -30,7 +30,7 @@ def wpm(typed, elapsed):
     Returns:
         (float): wpm of the typed string
     """
-    if (elapsed == 0):
+    if elapsed == 0 or elapsed <= 1:  # wait a bit prevent wpm spikes
         return
     
     num_chars = len(typed)

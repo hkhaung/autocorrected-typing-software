@@ -43,6 +43,7 @@ def wpm_acc_updater(sid):
         session = sessions[sid]
         
         if session["start_time"] is None:
+            time.sleep(0.5)
             continue
 
         elapsed = (datetime.now() - session["start_time"]).total_seconds()
@@ -75,7 +76,7 @@ def start_typing(data):
     
     if sessions[sid]["start_time"] is None and typed:
         sessions[sid]["start_time"] = datetime.now()
-        threading.Thread(target=wpm_acc_updater, args=(sid,), daemon=True).start()
+        socketio.start_background_task(wpm_acc_updater, sid)
 
     sessions[sid]['typed'] = typed
 

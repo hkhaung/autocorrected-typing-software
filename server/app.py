@@ -5,7 +5,7 @@ from server.extensions import db
 from server.routes import api_bp
 
 from sqlalchemy import inspect, select, func
-from server.data.models import Players, PlayerStats, Leaderboard, Books, Paragraphs
+from server.data import models
 from server.data.parse_books import save_paragraphs
 
 from server.extensions import socketio
@@ -13,52 +13,33 @@ from server.extensions import socketio
 import os
 from dotenv import load_dotenv
 
+
 load_dotenv()
-print("Running in", os.environ.get("FLASK_ENV"))
 
 
 def create_app():
-    migrate = None
-    if os.environ.get('FLASK_ENV') == 'production':
-        from server.extensions import migrate
+    from server.config import ProductionConfig
 
-        app = Flask(__name__, static_folder='build', static_url_path='/')
+    app = Flask(__name__, static_folder='build', static_url_path='/')
+    app.config.from_object(ProductionConfig)
 
-        from server.config import ProductionConfig
-        app.config.from_object(ProductionConfig)
-
-        # Route for serving React frontend
-        @app.route('/', defaults={'path': ''})
-        @app.route('/<path:path>')
-        def static_proxy(path):
-            if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
-                return send_from_directory(app.static_folder, path)
-            else:
-                return send_from_directory(app.static_folder, 'index.html')
-    else:
-        from flask_cors import CORS
-
-        app = Flask(__name__)
-        CORS(app)
-
-        from server.config import DevelopmentConfig
-        app.config.from_object(DevelopmentConfig)
-    
+    # Route for serving React frontend
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def static_proxy(path):
+        if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        else:
+            return send_from_directory(app.static_folder, 'index.html')
     
     app.register_blueprint(api_bp)
 
-    db.init_app(app)    
-    if os.environ.get('FLASK_ENV') == 'production':
-        migrate.init_app(app, db)
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
         seed_data()
-
-        socketio.init_app(app)
-    else:
-        with app.app_context():
-            db.create_all()
-            seed_data()
         
-        socketio.init_app(app, cors_allowed_origins="*")
+    socketio.init_app(app)
         
     return app
 
@@ -72,8 +53,8 @@ def seed_data():
             return False
 
         with db.session.begin():
-            books_count = db.session.execute(select(func.count()).select_from(Books)).scalar_one()
-            paragraphs_count = db.session.execute(select(func.count()).select_from(Paragraphs)).scalar_one()
+            books_count = db.session.execute(select(func.count()).select_from(models.Books)).scalar_one()
+            paragraphs_count = db.session.execute(select(func.count()).select_from(models.Paragraphs)).scalar_one()
 
         return books_count > 0 and paragraphs_count > 0
 
@@ -85,14 +66,3 @@ def seed_data():
     else:
         print("Database already seeded")
 
-
-if __name__ == '__main__':
-    try:
-        app = create_app()
-        if os.environ.get('FLASK_ENV') == 'development':
-            socketio.run(app, debug=True)
-        else:
-            socketio.run(app, host='0.0.0.0', port=5000)
-        
-    except Exception as e:
-        print(f"Error starting the app: {e}")
